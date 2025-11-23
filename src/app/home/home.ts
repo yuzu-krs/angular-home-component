@@ -13,9 +13,9 @@ import { HousingLocationInfo } from '../housinglocation';
       </form>
     </section>
     <section class="results">
-      <app-housing-location 
-        [housingLocation]="housingLocation"
-      />
+      @for (housingLocation of housingLocationList; track $index) {
+        <app-housing-location [housingLocation]="housingLocation" />
+      }
     </section>
   `,
   imports: [HousingLocation],
@@ -23,7 +23,9 @@ import { HousingLocationInfo } from '../housinglocation';
 })
 export class Home {
   readonly baseUrl='https://angular.dev/assets/images/tutorials/common';
-  housingLocation : HousingLocationInfo = {
+  
+  housingLocationList: HousingLocationInfo[] = [
+    {
     id: 9999,
     name: 'Test Home',
     city: 'Test city',
@@ -32,5 +34,6 @@ export class Home {
     availableUnits: 99,
     wifi: true,
     laundry: false,
-  };
+    },
+  ];
 }
