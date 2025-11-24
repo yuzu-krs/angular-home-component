@@ -136,8 +136,10 @@ export class HousingService {
    * @returns HousingLocationInfo または undefined
    */
   getHousingLocationById(id: number): HousingLocationInfo | undefined {
-    return this.housingLocationList.find(
-      (housingLocation) => housingLocation.id === id
-    );
+    return this.housingLocationList.find((housingLocation) => housingLocation.id === id);
+  }
+
+  submitApplication(name: string, email: string, location: string) {
+    console.log(`Application received from ${name} (${email}) for ${location}`);
   }
 }
