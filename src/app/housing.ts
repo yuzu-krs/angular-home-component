@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HousingLocationInfo } from './housinglocation';
 
+
 /**
  * HousingService は、アプリ内で使用される住宅データを管理するサービスです。
  * Angular の依存性注入（DI）によって、どのコンポーネントからでも利用できます。
@@ -9,135 +10,59 @@ import { HousingLocationInfo } from './housinglocation';
   providedIn: 'root', // アプリ全体で 1 つのインスタンスが共有される
 })
 export class HousingService {
-  // 画像のベースパス（毎回同じURLを書く手間を省く）
-  readonly baseUrl = 'https://angular.dev/assets/images/tutorials/common';
-
   /**
-   * 住宅データのリスト。
-   * 本来は API から取得するが、チュートリアルなので静的データを使用。
-   * protected にしているのは、クラス外から直接書き換えてほしくないため。
+   * JSON ServerのエンドポイントURL
+   * - JSON Serverは db.json のデータを REST API として公開
+   * - /locations エンドポイントで全物件データにアクセス可能
+   * 
+   * 起動方法: json-server --watch db.json
+   * アクセス例: http://localhost:3000/locations
    */
-  protected housingLocationList: HousingLocationInfo[] = [
-    {
-      id: 0,
-      name: 'Acme Fresh Start Housing',
-      city: 'Chicago',
-      state: 'IL',
-      photo: `${this.baseUrl}/bernard-hermant-CLKGGwIBTaY-unsplash.jpg`,
-      availableUnits: 4,
-      wifi: true,
-      laundry: true,
-    },
-    {
-      id: 1,
-      name: 'A113 Transitional Housing',
-      city: 'Santa Monica',
-      state: 'CA',
-      photo: `${this.baseUrl}/brandon-griggs-wR11KBaB86U-unsplash.jpg`,
-      availableUnits: 0,
-      wifi: false,
-      laundry: true,
-    },
-    {
-      id: 2,
-      name: 'Warm Beds Housing Support',
-      city: 'Juneau',
-      state: 'AK',
-      photo: `${this.baseUrl}/i-do-nothing-but-love-lAyXdl1-Wmc-unsplash.jpg`,
-      availableUnits: 1,
-      wifi: false,
-      laundry: false,
-    },
-    {
-      id: 3,
-      name: 'Homesteady Housing',
-      city: 'Chicago',
-      state: 'IL',
-      photo: `${this.baseUrl}/ian-macdonald-W8z6aiwfi1E-unsplash.jpg`,
-      availableUnits: 1,
-      wifi: true,
-      laundry: false,
-    },
-    {
-      id: 4,
-      name: 'Happy Homes Group',
-      city: 'Gary',
-      state: 'IN',
-      photo: `${this.baseUrl}/krzysztof-hepner-978RAXoXnH4-unsplash.jpg`,
-      availableUnits: 1,
-      wifi: true,
-      laundry: false,
-    },
-    {
-      id: 5,
-      name: 'Hopeful Apartment Group',
-      city: 'Oakland',
-      state: 'CA',
-      photo: `${this.baseUrl}/r-architecture-JvQ0Q5IkeMM-unsplash.jpg`,
-      availableUnits: 2,
-      wifi: true,
-      laundry: true,
-    },
-    {
-      id: 6,
-      name: 'Seriously Safe Towns',
-      city: 'Oakland',
-      state: 'CA',
-      photo: `${this.baseUrl}/phil-hearing-IYfp2Ixe9nM-unsplash.jpg`,
-      availableUnits: 5,
-      wifi: true,
-      laundry: true,
-    },
-    {
-      id: 7,
-      name: 'Hopeful Housing Solutions',
-      city: 'Oakland',
-      state: 'CA',
-      photo: `${this.baseUrl}/r-architecture-GGupkreKwxA-unsplash.jpg`,
-      availableUnits: 2,
-      wifi: true,
-      laundry: true,
-    },
-    {
-      id: 8,
-      name: 'Seriously Safe Towns',
-      city: 'Oakland',
-      state: 'CA',
-      photo: `${this.baseUrl}/saru-robert-9rP3mxf8qWI-unsplash.jpg`,
-      availableUnits: 10,
-      wifi: false,
-      laundry: false,
-    },
-    {
-      id: 9,
-      name: 'Capital Safe Towns',
-      city: 'Portland',
-      state: 'OR',
-      photo: `${this.baseUrl}/webaliser-_TPTXZd9mOo-unsplash.jpg`,
-      availableUnits: 6,
-      wifi: true,
-      laundry: true,
-    },
-  ];
-
+  url = 'http://localhost:3000/locations';
+  
   /**
-   * すべての住宅情報を返す関数。
-   * Home コンポーネントなどが画面表示用に呼び出す。
+   * HTTP通信：全ての住宅データを取得
+   * 
+   * @returns Promise<HousingLocationInfo[]> - 物件データの配列を返すPromise
+   * 
+   * 処理の流れ:
+   * 1. async: この関数は非同期（Promiseを返す）
+   * 2. await fetch(this.url): HTTP GETリクエストを送信し、レスポンスを待つ
+   *    → ブラウザ標準のfetch API使用（外部ライブラリ不要）
+   * 3. await data.json(): レスポンスをJSON形式にパース
+   * 4. ?? []: もしデータがnull/undefinedなら空配列を返す（フォールバック）
+   * 
+   * 呼び出し側の使用例:
+   * this.housingService.getAllHousingLocations()
+   *   .then(data => console.log(data));
    */
-  getAllHousingLocations(): HousingLocationInfo[] {
-    return this.housingLocationList;
+  async getAllHousingLocations(): Promise<HousingLocationInfo[]> {
+    const data = await fetch(this.url);
+    return (await data.json()) ?? [];
   }
 
   /**
-   * ID に一致する住宅を 1 件だけ返す。
-   * 詳細画面（detail ページ）向けのデータ取得で使う。
-   *
-   * @param id - 取得したい住宅のID
-   * @returns HousingLocationInfo または undefined
+   * HTTP通信：特定IDの住宅データを取得
+   * 
+   * @param id - 取得したい物件のID
+   * @returns Promise<HousingLocationInfo | undefined> - 該当物件データを返すPromise
+   * 
+   * 処理の流れ:
+   * 1. fetch(`${this.url}?id=${id}`): クエリパラメータでIDを指定
+   *    例: http://localhost:3000/locations?id=3
+   * 2. await data.json(): レスポンス（配列形式）をパース
+   *    JSON Server は ?id=3 の結果を配列で返す → [{ id: 3, ... }]
+   * 3. locationJson[0]: 配列の最初の要素（該当データ）を取得
+   * 4. ?? {}: データがなければ空オブジェクトを返す
+   * 
+   * 注意: JSON Serverのクエリは配列を返すため、[0]でアクセスが必要
    */
-  getHousingLocationById(id: number): HousingLocationInfo | undefined {
-    return this.housingLocationList.find((housingLocation) => housingLocation.id === id);
+  async getHousingLocationById(id: number): Promise<HousingLocationInfo | undefined> {
+    const data = await fetch(`${this.url}?id=${id}`);
+    const locationJson = await data.json();
+    return locationJson[0] ?? {};
   }
+
   submitApplication(firstName: string, lastName: string, email: string) {
     console.log(
       `Homes application received: firstName: ${firstName}, lastName: ${lastName}, email: ${email}.`,

@@ -7,7 +7,7 @@ import { HousingService } from '../housing';
 import { HousingLocationInfo } from '../housinglocation';
 
 // UI ヘルパー（*ngIf 等）と Reactive Forms 用モジュールを standalone コンポーネントで使うためにインポート
-import { NgIf } from '@angular/common';
+
 import { ReactiveFormsModule, FormGroup, FormControl } from '@angular/forms';
 
 @Component({
@@ -17,7 +17,7 @@ import { ReactiveFormsModule, FormGroup, FormControl } from '@angular/forms';
   // NgIf: *ngIf を使うため（今回はオプションだが慣習的に入れておく）
   // ReactiveFormsModule: FormGroup / FormControl をテンプレートで使うために必須
   standalone: true,
-  imports: [NgIf, ReactiveFormsModule],
+  imports: [ ReactiveFormsModule],
 
   // テンプレート内は optional chaining (?.) を多用して
   // データ読み込み前でも安全に動くようにしてあります
@@ -103,9 +103,38 @@ export class Details {
   });
 
   constructor() {
-    // 起動時に URL の :id を取得して、サービスから該当物件データを取得
-    const housingLocationId = Number(this.route.snapshot.params['id']);
-    this.housingLocation = this.housingService.getHousingLocationById(housingLocationId);
+    /**
+     * URLパラメータから物件IDを取得
+     * 
+     * 例: URL が /details/3 の場合
+     * - this.route.snapshot.params['id'] → "3" (文字列)
+     * - parseInt(..., 10) → 3 (数値) に変換
+     */
+    const housingLocationId = parseInt(this.route.snapshot.params['id'], 10);
+    
+    /**
+     * HTTP通信で特定の物件データを取得（非同期処理）
+     * 
+     * 処理の流れ:
+     * 1. getHousingLocationById(id)を呼び出し（Promiseを返す）
+     * 2. JSON Serverから該当IDの物件データを取得
+     *    → fetch(`http://localhost:3000/locations?id=${id}`)
+     * 3. .then()でPromiseの結果を受け取る
+     * 4. 取得したデータをhousingLocationプロパティに代入
+     * 
+     * タイミング:
+     * - constructor実行直後: housingLocation = undefined
+     * - fetch完了後（数ミリ秒後）: housingLocation = データ
+     * 
+     * テンプレート側の対策:
+     * - housingLocation?.name のように ?. を使用
+     * - データ取得前でもエラーにならない（undefined時は何も表示しない）
+     */
+    this.housingService
+      .getHousingLocationById(housingLocationId)
+      .then((housingLocation) => {
+        this.housingLocation = housingLocation;
+      });
   }
 
   /**
