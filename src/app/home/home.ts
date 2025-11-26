@@ -1,4 +1,6 @@
-import {Component, inject} from '@angular/core';
+
+import {Component, inject, ChangeDetectorRef} from '@angular/core';
+
 import {HousingLocation} from '../housing-location/housing-location';
 import {HousingLocationInfo} from '../housinglocation';
 import {HousingService} from '../housing';
@@ -22,6 +24,7 @@ import {HousingService} from '../housing';
   styleUrls: ['./home.css'],
 })
 export class Home {
+  private cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
   housingLocationList: HousingLocationInfo[] = [];
   housingService: HousingService = inject(HousingService);
 
@@ -34,6 +37,7 @@ export class Home {
       .then((housingLocationList: HousingLocationInfo[]) => {
         this.housingLocationList = housingLocationList;
         this.filteredLocationList = housingLocationList;
+        this.cdr.detectChanges();
       });
   }
 
