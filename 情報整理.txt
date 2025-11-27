@@ -161,3 +161,13 @@ main.ts
 
 ##
 
+#filterのテンプレート変数とは
+1.#filter という名前でこのinput要素を参照できるようなる。
+<input type="text" placeholder="Filter by city" #filter />
+
+2.ボタンがクリックされたとき、filter.value(inputの値)をfilterResults()メソッドに渡す。
+<button class="primary" type="button" (click)="filterResults(filter.value)">Search</button>
+
+3.コンポーネント側のfilterResult(text: string)が、その値を使って絞り込み処理を実行。
+
+
